@@ -1328,8 +1328,6 @@ function isAiCreativeWork(text: string) {
 
 function isArchiveEligible(project: Project) {
   if (project.id.startsWith("fallback-")) return false;
-  const fullName = githubFullNameFromProject(project);
-  if (fullName && isPinnedRepo(fullName)) return true;
   return isCurrentYearDate(project.publishedAt);
 }
 
@@ -1850,7 +1848,7 @@ function toProject(repo: GithubSearchItem, semantic: RepoSemanticProfile | undef
   const description = ((repo.description ?? "").trim() || manualConfig?.fallbackDescription || "").trim();
   if (!description || description.length < MIN_DESCRIPTION_LENGTH) return null;
   const text = `${repo.name} ${description} ${(repo.topics ?? []).join(" ")} ${repo.full_name}`.toLowerCase();
-  if (!isCurrentYearDate(repo.created_at) && !isPinnedRepo(repo.full_name)) return null;
+  if (!isCurrentYearDate(repo.created_at)) return null;
   if (!isPinnedRepo(repo.full_name) && !isAiCreativeWork(text)) return null;
   if (includesAny(text, EXCLUDE_LOW_REFERENCE_KEYWORDS) && !manualConfig) return null;
   if (includesAny(text, EXCLUDE_NON_DESIGN_DOMAINS) && !manualConfig) return null;
@@ -1953,7 +1951,7 @@ function toProjectEmergency(repo: GithubSearchItem, semantic: RepoSemanticProfil
   if (!repo.name?.trim()) return null;
 
   const text = `${repo.name} ${description} ${(repo.topics ?? []).join(" ")} ${repo.full_name}`.toLowerCase();
-  if (!isCurrentYearDate(repo.created_at) && !isPinnedRepo(repo.full_name)) return null;
+  if (!isCurrentYearDate(repo.created_at)) return null;
   if (!isPinnedRepo(repo.full_name) && !isAiCreativeWork(text)) return null;
 
   const age = hoursAgoFromDate(repo.created_at);
@@ -2103,8 +2101,8 @@ async function fetchProjects(): Promise<ProjectFeed> {
         repoDedupByCanonical.set(key, repo);
       }
     }
-    const repos = Array.from(repoDedupByCanonical.values()).filter(
-      (repo) => isCurrentYearDate(repo.created_at) || isPinnedRepo(repo.full_name),
+    const repos = Array.from(repoDedupByCanonical.values()).filter((repo) =>
+      isCurrentYearDate(repo.created_at),
     );
     rememberRepoStars(repos);
     const repoById = new Map(repos.map((repo) => [repo.id, repo]));
