@@ -249,13 +249,7 @@ export function ProjectCard({ project, index, isRightColumn = false, onMoreLikeT
 
   useEffect(() => {
     setImageFailed(false);
-  }, [project.previewImageUrl]);
-
-  useEffect(() => {
-    if (useTemplateThumbnail) return;
-    const timer = window.setTimeout(() => setImageFailed(true), 5000);
-    return () => window.clearTimeout(timer);
-  }, [project.previewImageUrl, useTemplateThumbnail]);
+  }, [project.id, project.previewImageUrl]);
 
   const typeLabel = pickTypeLabel(project);
   const mediumTokens = pickMediumTokens(project);
