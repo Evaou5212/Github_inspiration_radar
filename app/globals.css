@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f2ed;
+  --paper: #f1f0ea;
+  --foreground: #0a0a0a;
+  --muted: #6d6d6d;
+  --rule: #aaa79f;
+  --light-rule: #aaa79f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-light-rule: var(--light-rule);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  font-size: 21px;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.utility {
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.meta {
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.rule-t {
+  border-top: 1px solid var(--rule);
+}
+
+.rule-b {
+  border-bottom: 1px solid var(--rule);
+}
+
+.rule-l {
+  border-left: 1px solid var(--rule);
+}
+
+.rule-r {
+  border-right: 1px solid var(--rule);
+}
+
+.light-rule-b {
+  border-bottom: 1px solid var(--rule);
+}
+
+.paper {
+  background: var(--paper);
+}
+
+.title-xl {
+  font-size: clamp(52px, 5.6vw, 64px);
+  line-height: 0.92;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.label-tag {
+  display: inline-block;
+  border: 1px solid var(--rule);
+  padding: 2px 7px;
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.18;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.archive-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #5f5b53;
+  background: #e5e1d5;
+}
+
+.flip-card {
+  position: relative;
+  min-height: 640px;
+  perspective: 1200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  min-height: 640px;
+  transform-style: preserve-3d;
+  transition: transform 220ms ease;
+}
+
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.flip-card-front {
+  transform: rotateY(0deg);
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
