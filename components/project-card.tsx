@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type DashboardProject = {
   id: string;
@@ -246,6 +246,17 @@ export function ProjectCard({ project, index, isRightColumn = false, onMoreLikeT
     imageFailed ||
     (!project.hasCuratedPreview &&
       (isSuspiciousPreviewUrl(project.previewImageUrl) || shouldForceTemplateForModernPreview));
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [project.previewImageUrl]);
+
+  useEffect(() => {
+    if (useTemplateThumbnail) return;
+    const timer = window.setTimeout(() => setImageFailed(true), 5000);
+    return () => window.clearTimeout(timer);
+  }, [project.previewImageUrl, useTemplateThumbnail]);
+
   const typeLabel = pickTypeLabel(project);
   const mediumTokens = pickMediumTokens(project);
   const vibeTokens = pickVibeTokens(project);
@@ -280,7 +291,7 @@ export function ProjectCard({ project, index, isRightColumn = false, onMoreLikeT
                   src={useTemplateThumbnail ? templateThumbnail : project.previewImageUrl}
                   alt={`${project.name} preview`}
                   loading="lazy"
-                  className={`aspect-[16/10] w-full bg-[#efeee8] object-contain object-center transition duration-100 ${
+                  className={`aspect-[16/10] w-full bg-[#efeee8] object-contain object-center text-transparent transition duration-100 ${
                     useTemplateThumbnail
                       ? "grayscale-0 contrast-100"
                       : "grayscale contrast-[0.9] group-hover:grayscale-0 group-hover:contrast-100"
