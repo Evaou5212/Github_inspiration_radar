@@ -17,6 +17,7 @@ export type DashboardProject = {
   stars: number;
   forks: number;
   hot: number;
+  hotScore?: number;
   discoveredHoursAgo: number;
   whatItDoes: string;
   whyRecommended: string;

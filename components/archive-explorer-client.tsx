@@ -27,6 +27,7 @@ type AnalyzeResponse = {
 
 const STORAGE_KEY = "inspiration_hunt_user_projects_v1";
 const CJK_REGEX = /[\u3400-\u9fff]/;
+const CURRENT_ARCHIVE_YEAR = new Date().getFullYear();
 
 function toEnglishTag(tag: string) {
   const normalized = tag.trim().toLowerCase();
@@ -48,6 +49,29 @@ function getTopTrendingTags(projects: DashboardProject[], limit = 5) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([tag, count]) => ({ tag, count }));
+}
+
+function projectArchiveYear(project: DashboardProject) {
+  const yearMatch = project.updatedAtLabel.match(/(20\d{2})/);
+  return yearMatch ? Number(yearMatch[1]) : CURRENT_ARCHIVE_YEAR;
+}
+
+function isCurrentArchiveProject(project: DashboardProject) {
+  return projectArchiveYear(project) === CURRENT_ARCHIVE_YEAR;
+}
+
+function projectCreatedAtMs(project: DashboardProject) {
+  const isoDay = project.updatedAtLabel.match(/(\d{4}-\d{2}-\d{2})/);
+  if (isoDay) {
+    const timestamp = Date.parse(`${isoDay[1]}T00:00:00Z`);
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+  const timestamp = Date.parse(project.updatedAtLabel);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function heatScore(project: DashboardProject) {
+  return project.hotScore ?? 0;
 }
 
 function buildPieSegments(values: number[]) {
@@ -197,7 +221,10 @@ export function ArchiveExplorerClient({
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(userProjects));
   }, [userProjects]);
 
-  const allProjects = useMemo(() => [...userProjects, ...baseProjects], [baseProjects, userProjects]);
+  const allProjects = useMemo(
+    () => [...userProjects, ...baseProjects].filter(isCurrentArchiveProject),
+    [baseProjects, userProjects],
+  );
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -245,13 +272,15 @@ export function ArchiveExplorerClient({
 
     return list.sort((a, b) => {
       if (activeSort === "latest") {
+        const createdDelta = projectCreatedAtMs(b) - projectCreatedAtMs(a);
+        if (createdDelta !== 0) return createdDelta;
         if (a.discoveredHoursAgo !== b.discoveredHoursAgo) return a.discoveredHoursAgo - b.discoveredHoursAgo;
-        if (b.hot !== a.hot) return b.hot - a.hot;
         return b.stars - a.stars;
       }
       if (b.hot !== a.hot) return b.hot - a.hot;
-      if (a.discoveredHoursAgo !== b.discoveredHoursAgo) return a.discoveredHoursAgo - b.discoveredHoursAgo;
-      return b.stars - a.stars;
+      if (heatScore(b) !== heatScore(a)) return heatScore(b) - heatScore(a);
+      if (b.stars !== a.stars) return b.stars - a.stars;
+      return a.discoveredHoursAgo - b.discoveredHoursAgo;
     });
   }, [allProjects, activeCategory, activeTag, activeTypeFilter, activeMediumFilter, activeVibeFilter, query, activeSort]);
 
