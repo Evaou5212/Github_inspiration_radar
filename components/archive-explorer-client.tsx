@@ -143,32 +143,19 @@ function similarityScore(seed: DashboardProject, candidate: DashboardProject) {
 }
 
 function getNextEasternSlotLabel() {
-  const slots = new Set([0, 6, 12, 18]);
   const now = new Date();
-  const start = new Date(now.getTime());
-  start.setMinutes(0, 0, 0);
-  start.setHours(start.getHours() + 1);
-
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 10, 0, 0, 0));
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+  return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     hour12: false,
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  });
-
-  for (let step = 0; step <= 48; step += 1) {
-    const candidate = new Date(start.getTime() + step * 60 * 60 * 1000);
-    const parts = formatter.formatToParts(candidate);
-    const hour = Number(parts.find((item) => item.type === "hour")?.value ?? "0");
-    const minute = Number(parts.find((item) => item.type === "minute")?.value ?? "0");
-    if (slots.has(hour) && minute === 0) {
-      return formatter.format(candidate);
-    }
-  }
-
-  return formatter.format(start);
+  }).format(next);
 }
 
 export function ArchiveExplorerClient({
@@ -420,7 +407,7 @@ export function ArchiveExplorerClient({
             <p className="utility text-muted">project index</p>
             <h1 className="title-xl mt-1">Inspiration Radar</h1>
             <p className="mt-1 max-w-3xl text-[20px] leading-[1.4] tracking-normal text-foreground">
-              Feed refreshes every 6 hours · last updated {updatedAtLabel}.
+              Feed refreshes daily · last updated {updatedAtLabel}.
             </p>
           </div>
           <button
