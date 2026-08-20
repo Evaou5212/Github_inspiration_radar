@@ -236,20 +236,51 @@ function buildMomentumLabel(project: DashboardProject) {
 
 export function ProjectCard({ project, index, isRightColumn = false, onMoreLikeThis }: ProjectCardProps) {
   const [flipped, setFlipped] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
   const categoryLabel = project.category;
   const creatorLabel = project.creatorName.toLowerCase();
   const repoLabel = project.sourceLabel.toLowerCase();
   const templateThumbnail = buildTemplateThumbnail(project);
   const shouldForceTemplateForModernPreview = isModernGithubPreview(project.previewImageUrl);
-  const useTemplateThumbnail =
-    imageFailed ||
-    (!project.hasCuratedPreview &&
-      (isSuspiciousPreviewUrl(project.previewImageUrl) || shouldForceTemplateForModernPreview));
+  const forceTemplate =
+    !project.hasCuratedPreview &&
+    (isSuspiciousPreviewUrl(project.previewImageUrl) || shouldForceTemplateForModernPreview);
+  const [previewPhase, setPreviewPhase] = useState<"pending" | "ready" | "fallback">(
+    forceTemplate ? "fallback" : "pending",
+  );
 
   useEffect(() => {
-    setImageFailed(false);
-  }, [project.id, project.previewImageUrl]);
+    if (forceTemplate || !project.previewImageUrl) {
+      setPreviewPhase("fallback");
+      return;
+    }
+
+    let cancelled = false;
+    setPreviewPhase("pending");
+
+    const probe = new Image();
+    probe.referrerPolicy = "no-referrer";
+    probe.onload = () => {
+      if (!cancelled && probe.naturalWidth > 0) setPreviewPhase("ready");
+      else if (!cancelled) setPreviewPhase("fallback");
+    };
+    probe.onerror = () => {
+      if (!cancelled) setPreviewPhase("fallback");
+    };
+    probe.src = project.previewImageUrl;
+
+    const hangTimer = window.setTimeout(() => {
+      if (!cancelled) setPreviewPhase((current) => (current === "pending" ? "fallback" : current));
+    }, 12000);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(hangTimer);
+      probe.onload = null;
+      probe.onerror = null;
+    };
+  }, [forceTemplate, project.id, project.previewImageUrl]);
+
+  const useTemplateThumbnail = forceTemplate || previewPhase !== "ready";
 
   const typeLabel = pickTypeLabel(project);
   const mediumTokens = pickMediumTokens(project);
@@ -279,20 +310,25 @@ export function ProjectCard({ project, index, isRightColumn = false, onMoreLikeT
                 {project.userSubmitted ? " / user" : ""}
               </div>
               <div className="mt-1 border border-rule bg-[#ecebe5] p-1">
-                {/* Use raw img because preview hosts are user-generated and highly dynamic. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={useTemplateThumbnail ? templateThumbnail : project.previewImageUrl}
-                  alt={`${project.name} preview`}
-                  loading="lazy"
-                  className={`aspect-[16/10] w-full bg-[#efeee8] object-contain object-center text-transparent transition duration-100 ${
-                    useTemplateThumbnail
-                      ? "grayscale-0 contrast-100"
-                      : "grayscale contrast-[0.9] group-hover:grayscale-0 group-hover:contrast-100"
-                  }`}
-                  referrerPolicy="no-referrer"
-                  onError={() => setImageFailed(true)}
-                />
+                {previewPhase === "pending" ? (
+                  <div className="aspect-[16/10] w-full bg-[#efeee8]" aria-hidden="true" />
+                ) : (
+                  <>
+                    {/* Use raw img because preview hosts are user-generated and highly dynamic. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={useTemplateThumbnail ? templateThumbnail : project.previewImageUrl}
+                      alt={`${project.name} preview`}
+                      className={`aspect-[16/10] w-full bg-[#efeee8] object-contain object-center text-transparent transition duration-100 ${
+                        useTemplateThumbnail
+                          ? "grayscale-0 contrast-100"
+                          : "grayscale contrast-[0.9] group-hover:grayscale-0 group-hover:contrast-100"
+                      }`}
+                      referrerPolicy="no-referrer"
+                      onError={() => setPreviewPhase("fallback")}
+                    />
+                  </>
+                )}
               </div>
               <div className="mt-1 utility flex flex-wrap items-center gap-x-2 gap-y-0.5 text-muted group-hover:text-white">
                 <span className="label-tag group-hover:border-white">{creatorLabel}</span>
