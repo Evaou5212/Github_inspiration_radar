@@ -54,7 +54,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  if (!forceRefresh && !isEasternRadarSlot()) {
+  const isVercelCron = Boolean(authHeader && bearerSecret && secret && bearerSecret === secret);
+  if (!forceRefresh && !isVercelCron && !isEasternRadarSlot()) {
     return NextResponse.json({
       ok: true,
       skipped: true,
