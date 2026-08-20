@@ -68,6 +68,7 @@ export default async function Home() {
     stars: project.stars,
     forks: project.comments,
     hot: project.hotDeltaStars24h,
+    hotScore: project.hotScore24h,
     discoveredHoursAgo: project.discoveredHoursAgo,
     whatItDoes: toEnglishText(
       project.whatItDoes,
