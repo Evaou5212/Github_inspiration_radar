@@ -1,8 +1,8 @@
 import { ArchiveExplorerClient } from "@/components/archive-explorer-client";
 import type { DashboardProject } from "@/components/project-card";
-import { FEED_REVALIDATE_SECONDS, getAllProjects, getProjectFeed } from "@/lib/projects";
+import { getAllProjects, getProjectFeed } from "@/lib/projects";
 
-export const revalidate = FEED_REVALIDATE_SECONDS;
+export const revalidate = 86400;
 
 function mapCategory(value: string): "creative" | "aesthetic" | "tools" {
   if (value === "创意类") return "creative";
